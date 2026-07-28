@@ -26,8 +26,8 @@
         <div class="section-title">
           <h2>Source</h2>
           <div class="segmented" role="tablist" aria-label="Source type">
-            <button class="segment is-active" type="button" data-mode="meeting">Meeting</button>
-            <button class="segment" type="button" data-mode="email">Email</button>
+            <button class="segment is-active" type="button" role="tab" aria-selected="true" data-mode="meeting">Meeting</button>
+            <button class="segment" type="button" role="tab" aria-selected="false" data-mode="email">Email</button>
           </div>
         </div>
 
@@ -50,6 +50,11 @@
         <label>
           <span id="sourceTextLabel">Transcript</span>
           <textarea id="sourceText" rows="13" placeholder="Paste the transcript or email thread here"></textarea>
+        </label>
+
+        <label class="file-line">
+          <span>Or load a file</span>
+          <input id="sourceFile" type="file" accept=".txt,.md,.markdown,.vtt,.srt,text/plain,text/markdown" />
         </label>
 
         <details class="advanced">
@@ -132,6 +137,6 @@
       </section>
     </main>
 
-    <script src="./app.js" defer></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>

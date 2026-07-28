@@ -54,11 +54,15 @@ This repo also includes a browser-only GitHub Pages version in `docs/`.
 
 What works in the hosted version:
 
-- Paste a meeting transcript or email thread
+- Paste a meeting transcript or email thread, or load a `.txt`/`.md`/`.vtt`/`.srt` file
 - Add title, date, and context
 - Scan and review local anonymization terms before sending anything to Claude
-- Generate Obsidian-ready Markdown
+- Generate Obsidian-ready Markdown, streamed token-by-token as Claude writes it
 - Copy or download the `.md` note
+
+Anonymization runs entirely in the browser: terms you keep enabled are swapped for
+`PERSON_n` / `ORG_n` aliases before the request leaves the page, and swapped back
+once the note finishes streaming.
 
 What stays local/server-only:
 
@@ -73,7 +77,14 @@ To deploy it, enable GitHub Pages with **GitHub Actions** as the publishing sour
 https://ryleyp.github.io/notecroppy/
 ```
 
-For a local preview, open `docs/index.html` in your browser.
+For a local preview, serve the folder over HTTP — `npx serve docs` or
+`python3 -m http.server -d docs` — and open the printed URL. Opening
+`docs/index.html` straight from disk does not work because the app loads
+`docs/lib.js` as an ES module, which browsers block on `file://`.
+
+The browser-only logic in `docs/lib.js` (corrections, anonymization, prompt
+building, SSE parsing) is covered by `docs/lib.test.mjs` and runs as part of
+`npm test`.
 
 ### 4. Configure in the app
 
