@@ -178,6 +178,13 @@ textarea {
   line-height: 1.45;
 }
 
+.file-line input[type="file"] {
+  padding: 8px 11px;
+  font-size: 13px;
+  color: var(--muted);
+  background: #fbfcfd;
+}
+
 input:focus,
 select:focus,
 textarea:focus {

@@ -1,31 +1,25 @@
-/* global Blob, URL, crypto, document, fetch, localStorage, navigator, sessionStorage */
+/* global Blob, URL, document, fetch, localStorage, navigator, sessionStorage, TextDecoder */
+
+import {
+  DEFAULT_ENDPOINT,
+  activeReplacements,
+  addTerm,
+  anonymize,
+  applyCorrections,
+  buildFilename,
+  buildPrompt,
+  createStreamParser,
+  detectTerms,
+  nextAlias,
+  parseCorrections,
+  restore,
+  textFromMessage,
+  todayIso,
+} from "./lib.js";
 
 const STORAGE_KEY = "notecroppy:web:v1";
 const API_KEY_KEY = "notecroppy:web:anthropic-key";
-const DEFAULT_ENDPOINT = "https://api.anthropic.com/v1/messages";
-const MONTHS = new Set([
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]);
-const GENERIC_TERMS = new Set([
-  "Action Items",
-  "Customer Success",
-  "Detailed Notes",
-  "Executive Summary",
-  "Follow Up",
-  "Meeting Notes",
-  "Next Steps",
-]);
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 const state = {
   mode: "meeting",
@@ -43,97 +37,27 @@ function setStatus(message, type = "") {
   node.className = `status ${type}`.trim();
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+function corrections() {
+  return parseCorrections(el("corrections").value);
 }
 
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function termPattern(term) {
-  const escaped = escapeRegExp(term);
-  const left = /^\w/.test(term) ? "\\b" : "";
-  const right = /\w$/.test(term) ? "\\b" : "";
-  return new RegExp(`${left}${escaped}${right}`, "gi");
-}
-
-function parseCorrections() {
-  return el("corrections").value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const parts = line.split("=>");
-      if (parts.length < 2) return null;
-      return {
-        find: parts[0].trim(),
-        replace: parts.slice(1).join("=>").trim(),
-      };
-    })
-    .filter((rule) => rule && rule.find);
-}
-
-function applyCorrections(text, corrections) {
-  let next = text || "";
-  for (const rule of corrections) {
-    next = next.replace(termPattern(rule.find), rule.replace);
-  }
-  return next;
-}
-
-function aliasPrefix(type) {
-  return type === "person" ? "PERSON" : "ORG";
-}
-
-function nextAlias(type) {
-  const prefix = aliasPrefix(type);
-  const used = state.terms
-    .filter((term) => term.alias.startsWith(`${prefix}_`))
-    .map((term) => Number(term.alias.split("_")[1]))
-    .filter(Number.isFinite);
-  return `${prefix}_${Math.max(0, ...used) + 1}`;
-}
-
-function addTerm(text, type = "person") {
-  const clean = String(text || "").trim().replace(/\s+/g, " ");
-  if (!clean) return;
-  const exists = state.terms.some((term) => term.original.toLowerCase() === clean.toLowerCase());
-  if (exists) return;
-  state.terms.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
-    enabled: true,
-    original: clean,
-    restored: clean,
-    type,
-    alias: nextAlias(type),
-  });
-}
-
-function detectTerms() {
-  const corrections = parseCorrections();
-  const source = applyCorrections(el("sourceText").value, corrections);
-  const patterns = [
-    { type: "org", regex: /\b[A-Z0-9][A-Za-z0-9&.,' -]{2,42}\s(?:Inc|LLC|Ltd|Corp|Corporation|Company|Systems|Technologies|University|Hospital|Labs?|Group|Division|Team)\b/g },
-    { type: "org", regex: /\b[A-Z]{2,6}\b/g },
-    { type: "person", regex: /\b(?:[A-Z][a-z]+|[A-Z]\.)\s+(?:[A-Z][a-z]+|[A-Z]\.)(?:\s+[A-Z][a-z]+)?\b/g },
-    { type: "org", regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi },
-    { type: "org", regex: /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g },
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern.regex)) {
-      const candidate = match[0].trim();
-      if (candidate.length < 3 || GENERIC_TERMS.has(candidate) || MONTHS.has(candidate.split(" ")[0])) continue;
-      if (/^\d+$/.test(candidate)) continue;
-      if (pattern.type === "org" && /^[A-Z]{2,6}$/.test(candidate) && ["API", "CEO", "CSV", "JSON", "PDF", "QBR", "URL"].includes(candidate)) continue;
-      addTerm(candidate, pattern.type);
-    }
-  }
+function scanForTerms() {
+  const source = applyCorrections(el("sourceText").value, corrections());
+  const added = detectTerms(state.terms, source);
 
   renderTerms();
   persistDraft();
-  setStatus(state.terms.length ? `Found ${state.terms.length} anonymization term${state.terms.length === 1 ? "" : "s"}.` : "No likely terms found.");
+
+  if (!state.terms.length) {
+    setStatus("No likely terms found.");
+    return;
+  }
+  const plural = state.terms.length === 1 ? "" : "s";
+  setStatus(
+    added
+      ? `Found ${added} new term${added === 1 ? "" : "s"} (${state.terms.length} total).`
+      : `No new terms; ${state.terms.length} already tracked term${plural}.`,
+  );
 }
 
 function renderTerms() {
@@ -156,6 +80,7 @@ function renderTerms() {
     enabled.type = "checkbox";
     enabled.checked = term.enabled;
     enabled.dataset.field = "enabled";
+    enabled.setAttribute("aria-label", `Anonymize ${term.original}`);
     row.appendChild(enabled);
 
     const original = document.createElement("input");
@@ -197,81 +122,21 @@ function renderTerms() {
   }
 }
 
-function replacements() {
-  return state.terms
-    .filter((term) => term.enabled && term.original && term.alias)
-    .slice()
-    .sort((a, b) => b.original.length - a.original.length);
+function requestBody(prompt, stream) {
+  return JSON.stringify({
+    model: el("model").value,
+    max_tokens: 5000,
+    stream,
+    system: "You write precise, source-grounded Obsidian Markdown notes. Respond with only Markdown.",
+    messages: [{ role: "user", content: prompt }],
+  });
 }
 
-function anonymize(text) {
-  let next = text;
-  for (const term of replacements()) {
-    next = next.replace(termPattern(term.original), term.alias);
-  }
-  return next;
-}
-
-function restore(text) {
-  let next = text;
-  for (const term of replacements().sort((a, b) => b.alias.length - a.alias.length)) {
-    next = next.replace(termPattern(term.alias), term.restored || term.original);
-  }
-  return next;
-}
-
-function buildPrompt(sanitizedSource) {
-  const title = anonymize(el("sourceTitle").value.trim()) || (state.mode === "email" ? "Email Thread" : "Meeting Notes");
-  const date = el("sourceDate").value || todayIso();
-  const context = anonymize(applyCorrections(el("sourceContext").value.trim(), parseCorrections()));
-  const kind = state.mode === "email" ? "email thread" : "meeting transcript";
-
-  return `Create an Obsidian-ready Markdown note from the ${kind} below.
-
-Rules:
-- Use only the source content and user context.
-- Preserve anonymization aliases exactly as written, such as PERSON_1 and ORG_1.
-- Do not invent decisions, owners, dates, product names, or follow-up items.
-- If information is missing, write "Not stated."
-- Keep the note concise but complete enough to be useful later.
-
-Metadata:
-- Title: ${title}
-- Date: ${date}
-- Type: ${state.mode === "email" ? "Email Thread" : "Meeting"}
-
-User context:
-${context || "Not stated."}
-
-Return this Markdown structure:
-
-# ${title}
-
-Date: ${date}
-Type: ${state.mode === "email" ? "Email Thread" : "Meeting"}
-
-## Summary
-
-## Decisions
-
-## Action Items
-
-- [ ] [owner or Not stated] - [task] - [due date or Not stated]
-
-## Customer / Stakeholder Notes
-
-## Detailed Notes
-
-## Follow-Up Questions
-
-Source:
-${sanitizedSource}`;
-}
-
-async function callAnthropic(prompt) {
+async function callAnthropic(prompt, onDelta) {
   const apiKey = el("apiKey").value.trim();
   if (!apiKey) throw new Error("Add your Anthropic API key in Generation settings.");
 
+  const streaming = typeof onDelta === "function";
   const response = await fetch(el("apiEndpoint").value.trim() || DEFAULT_ENDPOINT, {
     method: "POST",
     headers: {
@@ -280,12 +145,7 @@ async function callAnthropic(prompt) {
       "anthropic-version": "2023-06-01",
       "anthropic-dangerous-direct-browser-access": "true",
     },
-    body: JSON.stringify({
-      model: el("model").value,
-      max_tokens: 5000,
-      system: "You write precise, source-grounded Obsidian Markdown notes. Respond with only Markdown.",
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: requestBody(prompt, streaming),
   });
 
   if (!response.ok) {
@@ -293,12 +153,25 @@ async function callAnthropic(prompt) {
     throw new Error(text || `Claude request failed with HTTP ${response.status}`);
   }
 
-  const data = await response.json();
-  return (data.content || [])
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
+  if (!streaming || !response.body) {
+    return textFromMessage(await response.json());
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const push = createStreamParser();
+  let markdown = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const delta = push(decoder.decode(value, { stream: true }));
+    if (!delta) continue;
+    markdown += delta;
+    onDelta(markdown);
+  }
+
+  return markdown.trim();
 }
 
 async function generate() {
@@ -314,14 +187,33 @@ async function generate() {
   setStatus("Preparing anonymized request...");
 
   try {
-    const corrections = parseCorrections();
-    const corrected = applyCorrections(source, corrections);
-    const sanitizedSource = anonymize(corrected);
-    const markdown = await callAnthropic(buildPrompt(sanitizedSource));
-    const restored = applyCorrections(restore(markdown), corrections);
-    state.lastMarkdown = restored;
-    el("output").value = restored;
-    el("preview").textContent = restored;
+    const rules = corrections();
+    const sanitizedSource = anonymize(applyCorrections(source, rules), state.terms);
+    const prompt = buildPrompt({
+      mode: state.mode,
+      title: anonymize(el("sourceTitle").value.trim(), state.terms),
+      date: el("sourceDate").value,
+      context: anonymize(applyCorrections(el("sourceContext").value.trim(), rules), state.terms),
+      source: sanitizedSource,
+    });
+
+    setStatus(
+      state.terms.length
+        ? `Streaming from Claude with ${activeReplacements(state.terms).length} term(s) anonymized...`
+        : "Streaming from Claude...",
+    );
+
+    // Aliases are only reversed once the note is complete: a partial stream can
+    // split an alias across chunks, so restoring mid-stream would corrupt it.
+    const markdown = await callAnthropic(prompt, (partial) => {
+      el("output").value = partial;
+      el("preview").textContent = partial;
+    });
+
+    const finished = applyCorrections(restore(markdown, state.terms), rules);
+    state.lastMarkdown = finished;
+    el("output").value = finished;
+    el("preview").textContent = finished;
     persistDraft();
     setStatus("Generated Markdown is ready.", "ok");
   } catch (error) {
@@ -332,17 +224,37 @@ async function generate() {
   }
 }
 
-function filename() {
-  const rawTitle = el("sourceTitle").value.trim() || (state.mode === "email" ? "Email Thread" : "Meeting Notes");
-  const cleanTitle = rawTitle.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "note";
-  return `${el("sourceDate").value || todayIso()}-${cleanTitle}.md`;
+async function loadFile(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    setStatus("That file is larger than 5 MB. Paste the relevant part instead.", "error");
+    return;
+  }
+
+  try {
+    el("sourceText").value = await file.text();
+    if (!el("sourceTitle").value.trim()) {
+      el("sourceTitle").value = file.name.replace(/\.(txt|md|markdown|vtt|srt)$/i, "").replace(/[_-]+/g, " ").trim();
+    }
+    persistDraft();
+    setStatus(`Loaded ${file.name}.`, "ok");
+  } catch {
+    setStatus("Could not read that file.", "error");
+  }
 }
 
 async function copyOutput() {
   const output = el("output").value;
   if (!output) return;
-  await navigator.clipboard.writeText(output);
-  setStatus("Copied Markdown to clipboard.", "ok");
+  try {
+    await navigator.clipboard.writeText(output);
+    setStatus("Copied Markdown to clipboard.", "ok");
+  } catch {
+    setStatus("Clipboard blocked by the browser. Select the text and copy manually.", "error");
+  }
 }
 
 function downloadOutput() {
@@ -352,7 +264,11 @@ function downloadOutput() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename();
+  link.download = buildFilename({
+    title: el("sourceTitle").value,
+    date: el("sourceDate").value,
+    mode: state.mode,
+  });
   link.click();
   URL.revokeObjectURL(url);
   setStatus("Downloaded Markdown file.", "ok");
@@ -408,6 +324,7 @@ function setMode(mode) {
   state.mode = mode;
   document.querySelectorAll(".segment").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.mode === mode);
+    button.setAttribute("aria-selected", String(button.dataset.mode === mode));
   });
   el("sourceTextLabel").textContent = mode === "email" ? "Email thread" : "Transcript";
   persistDraft();
@@ -426,17 +343,39 @@ function clearAll() {
   setStatus("Cleared.");
 }
 
+function updateTermFromEvent(event) {
+  const row = event.target.closest(".term-card");
+  if (!row || !event.target.dataset.field) return;
+  const term = state.terms.find((item) => item.id === row.dataset.id);
+  if (!term) return;
+
+  const field = event.target.dataset.field;
+  term[field] = field === "enabled" ? event.target.checked : event.target.value;
+  if (field === "type") {
+    term.alias = nextAlias(state.terms.filter((item) => item.id !== term.id), term.type);
+    renderTerms();
+  }
+  persistDraft();
+}
+
 function wireEvents() {
   document.querySelectorAll(".segment").forEach((button) => {
     button.addEventListener("click", () => setMode(button.dataset.mode));
   });
-  el("scanTerms").addEventListener("click", detectTerms);
+  el("scanTerms").addEventListener("click", scanForTerms);
   el("addTerm").addEventListener("click", () => {
-    addTerm(el("manualTerm").value, el("manualType").value);
+    addTerm(state.terms, el("manualTerm").value, el("manualType").value);
     el("manualTerm").value = "";
     renderTerms();
     persistDraft();
   });
+  el("manualTerm").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      el("addTerm").click();
+    }
+  });
+  el("sourceFile").addEventListener("change", loadFile);
   el("generate").addEventListener("click", generate);
   el("clearAll").addEventListener("click", clearAll);
   el("copyOutput").addEventListener("click", copyOutput);
@@ -458,20 +397,6 @@ function wireEvents() {
     renderTerms();
     persistDraft();
   });
-}
-
-function updateTermFromEvent(event) {
-  const row = event.target.closest(".term-card");
-  if (!row || !event.target.dataset.field) return;
-  const term = state.terms.find((item) => item.id === row.dataset.id);
-  if (!term) return;
-  const field = event.target.dataset.field;
-  term[field] = field === "enabled" ? event.target.checked : event.target.value;
-  if (field === "type") {
-    term.alias = nextAlias(term.type);
-    renderTerms();
-  }
-  persistDraft();
 }
 
 loadDraft();
