@@ -1,0 +1,238 @@
+EA ENGAGEMENT TYPE — EXAMPLE REFERENCE
+=======================================
+Fill in the EXAMPLES sections below with real activities from your notes.
+These will be used to improve Claude's classification accuracy.
+
+
+TYPE: Entitlement Awareness & Promotion
+----------------------------------------
+Activities that promote awareness or use of EA entitlements.
+
+  SUBTYPE: Digital Campaign/Promotion
+  (email/digital outreach campaigns, NI Connect promos, registration drives)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: MidTerm Reviews
+  (formal midpoint EA review)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Newsletters
+  (quarterly newsletters to account contacts)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Shared Space Set-up/Update
+  (setting up or updating a shared portal or resource hub)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Training/Support Plans
+  (creating or scheduling a formal training plan across sites/teams)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Training/Support Webinar
+  (delivering a live training or support session to users)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: Internal Alignment & Collaboration
+-----------------------------------------
+NI-INTERNAL ONLY sessions (no customer present). Only log if a clear
+decision or outcome resulted.
+
+  SUBTYPE: Account Planning
+  (CSM/FAE interlock, account strategy sessions, NI Connect planning calls)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Account Team Kick-Off
+  (formal kickoff with the full internal account team: CSM, FAE, AM, etc.)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Product Feedback
+  (internal session to escalate or document customer product feedback)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  (recurring internal team syncs that produced a concrete outcome)
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: Onboarding & Kick-Off
+-----------------------------
+Onboarding new admins or users. EA Admins are CUSTOMER-SIDE people
+(Delta, Acme, Cardinal, Beacon, etc.) — not NI employees.
+
+  SUBTYPE: EA Admin Onboarding
+  (onboarding a new customer-side EA Admin to EA scope, entitlements, governance)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: EA End-User Kick-Off
+  (kickoff session for end users at the customer)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: Strategic Relationship Management
+-----------------------------------------
+High-touch customer-facing relationship and governance activities.
+EA Admin Syncs are meetings with CUSTOMER-SIDE EA Admins, not NI staff.
+
+  SUBTYPE: EA Admin Sync
+  (recurring or ad-hoc sync with the customer's EA Admin or key stakeholder)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Escalation/Risk Management
+  (active risk mitigation, escalations, at-risk situations)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: QBRs/EBRs
+  (formal quarterly or executive business review)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Roadmap Review
+  (session reviewing NI product roadmap with customer stakeholders)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: SLE Governance
+  (SystemLink Enterprise governance meetings)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: User Groups
+------------------
+Group sessions with multiple attendees. Subtype depends on who led the session.
+
+  SUBTYPE: Demo Days
+  (NI-led session — NI/FAE presents or demos products to the customer)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: User Group
+  (customer-sponsored recurring session; customer drives cadence/agenda)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  (planning or coordination sessions tied to user group execution)
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: Value Realization & Success Stories
+------------------------------------------
+Capturing or communicating customer outcomes and ROI.
+
+  SUBTYPE: Case Study
+  (written or formal case study in progress or completed)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Customer Testimonial
+  (capturing a customer success quote or formal testimonial)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Outcome Review
+  (reviewing measured outcomes and value delivered)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: SLE ROI Review
+  (formal ROI review specific to SystemLink Enterprise)
+  EXAMPLES:
+  -
+  -
+  -
+
+  SUBTYPE: Other
+  EXAMPLES:
+  -
+  -
+  -
+
+
+TYPE: Other
+------------
+Only use if truly none of the above types fit.
+EXAMPLES:
+-
+-
+-

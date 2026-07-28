@@ -1,0 +1,108 @@
+EA ACTIVITY REPORTING — FUNCTION OVERVIEW
+==========================================
+
+
+WHAT IT DOES
+------------
+The EA Activity Report tab scans your Obsidian meeting notes from the past
+quarter and generates a structured activity table formatted for Salesforce
+EA Engagement entry. It reads your notes, identifies reportable CSM
+activities, classifies each one by Type and Subtype, and outputs a
+Markdown table ready to copy into SFDC.
+
+
+HOW TO USE IT
+-------------
+1. Go to the "EA Activity" tab in the app header.
+2. Select the account folder you want to report on (e.g. "Beacon Systems",
+   "Cardinal Defense", "Delta Microsystems").
+3. Click "Scan Folder" — the app loads all notes dated within the past
+   3 months.
+4. (Optional) Review the keyword scrub panel. Any lines flagged as
+   belonging to other accounts are removed before sending to Claude.
+   Check a line to keep it if it was flagged incorrectly.
+5. Choose a model (Haiku = faster/cheaper, Sonnet = better quality).
+6. Click "Generate EA Activity Report."
+7. The table streams in live. When complete, click "Save to Obsidian"
+   to write the file to your vault, or "Copy" to copy the Markdown.
+
+
+WHAT IT OUTPUTS
+---------------
+A Markdown table with one row per reportable activity:
+
+  | Account | Event Date | Engagement Title | Type | Subtype | Comments |
+
+- Account         — the account name (from the folder you selected)
+- Event Date      — pulled from the ### YYYY-MM-DD heading of the source note
+- Engagement Title — short descriptive name matching SFDC style
+- Type            — one of 6 EA Engagement Types (see taxonomy below)
+- Subtype         — specific subtype within that Type
+- Comments        — up to 1,000 characters; executive-facing, CSM as subject
+
+
+WHAT IT INCLUDES / EXCLUDES
+----------------------------
+INCLUDED:
+- Meetings with customers, EA Admins, or stakeholders
+- Internal NI sessions that produced a concrete decision or outcome
+- User group sessions, demo days, case study work
+- Training plan sessions, newsletter sends, campaign activities
+- Escalations and risk management activities
+
+EXCLUDED:
+- Routine emails or calendar holds with no outcome
+- Purely logistical check-ins with no substance
+- Duplicate rows for the same session across multiple notes
+- Content from other accounts (scrubbed before sending to Claude)
+
+
+EA ENGAGEMENT TYPE TAXONOMY (SFDC VALUES)
+------------------------------------------
+Types and subtypes must exactly match SFDC dropdown values.
+
+TYPE: Entitlement Awareness & Promotion
+  Subtypes: Digital Campaign/Promotion | MidTerm Reviews | Newsletters |
+            Shared Space Set-up/Update | Training/Support Plans |
+            Training/Support Webinar | Other
+
+TYPE: Internal Alignment & Collaboration
+  (NI-internal only — no customer present)
+  Subtypes: Account Planning | Account Team Kick-Off | Product Feedback | Other
+
+TYPE: Onboarding & Kick-Off
+  (EA Admins = customer-side IT contacts who manage the EA, e.g. at
+   Delta, Acme, Cardinal, Beacon — NOT NI employees)
+  Subtypes: EA Admin Onboarding | EA End-User Kick-Off | Other
+
+TYPE: Strategic Relationship Management
+  (EA Admin Syncs = meetings with customer-side EA Admins, not NI staff)
+  Subtypes: EA Admin Sync | Escalation/Risk Management | QBRs/EBRs |
+            Roadmap Review | SLE Governance | Other
+
+TYPE: User Groups
+  (subtype depends on who led the session)
+  Subtypes: Demo Days (NI-led) | User Group (customer-led) | Other
+
+TYPE: Value Realization & Success Stories
+  Subtypes: Case Study | Customer Testimonial | Outcome Review |
+            SLE ROI Review | Other
+
+TYPE: Other
+  (only if none of the above truly fit)
+
+
+PRIVACY / SANITIZATION
+-----------------------
+Before sending notes to Claude:
+- Names and account references in your glossary are replaced with
+  pseudonyms (reversed in the output)
+- Lines containing keywords tied to other accounts are scrubbed
+- You can override scrubbed lines by checking them in the scrub panel
+
+
+SAVING
+------
+Clicking "Save to Obsidian" writes the report as a Markdown file into
+your vault inside the selected account folder, named:
+  "EA Activity Report YYYY-MM-DD.md"
