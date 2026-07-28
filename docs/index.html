@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notecroppy Web</title>
+    <meta
+      name="description"
+      content="A browser-only Notecroppy web app for turning transcripts and email threads into Obsidian-ready Markdown."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">GitHub Pages version</p>
+        <h1>Notecroppy Web</h1>
+      </div>
+      <div class="top-actions">
+        <a class="link-button" href="https://github.com/ryleyp/notecroppy" rel="noreferrer">GitHub</a>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="panel input-panel" aria-label="Source and generation controls">
+        <div class="section-title">
+          <h2>Source</h2>
+          <div class="segmented" role="tablist" aria-label="Source type">
+            <button class="segment is-active" type="button" data-mode="meeting">Meeting</button>
+            <button class="segment" type="button" data-mode="email">Email</button>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <label>
+            <span>Title</span>
+            <input id="sourceTitle" type="text" placeholder="Customer sync" autocomplete="off" />
+          </label>
+          <label>
+            <span>Date</span>
+            <input id="sourceDate" type="date" />
+          </label>
+        </div>
+
+        <label>
+          <span>Context</span>
+          <textarea id="sourceContext" rows="3" placeholder="Account, audience, desired note style, known decisions..."></textarea>
+        </label>
+
+        <label>
+          <span id="sourceTextLabel">Transcript</span>
+          <textarea id="sourceText" rows="13" placeholder="Paste the transcript or email thread here"></textarea>
+        </label>
+
+        <details class="advanced">
+          <summary>Generation settings</summary>
+          <div class="grid two">
+            <label>
+              <span>Anthropic API key</span>
+              <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" />
+            </label>
+            <label>
+              <span>Model</span>
+              <select id="model">
+                <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                <option value="claude-sonnet-5">Claude Sonnet 5</option>
+              </select>
+            </label>
+          </div>
+          <label class="checkbox-line">
+            <input id="rememberKey" type="checkbox" />
+            <span>Keep API key in this browser session</span>
+          </label>
+          <label>
+            <span>Messages endpoint</span>
+            <input id="apiEndpoint" type="url" value="https://api.anthropic.com/v1/messages" />
+          </label>
+        </details>
+
+        <section class="mini-panel" aria-label="Corrections">
+          <div class="mini-head">
+            <h3>Corrections</h3>
+          </div>
+          <textarea
+            id="corrections"
+            rows="3"
+            placeholder="One per line: misspelled name => corrected name"
+          ></textarea>
+        </section>
+
+        <section class="mini-panel" aria-label="Anonymization">
+          <div class="mini-head">
+            <h3>Anonymization</h3>
+            <button id="scanTerms" type="button" class="secondary small">Scan</button>
+          </div>
+
+          <div class="add-row">
+            <input id="manualTerm" type="text" placeholder="Name, company, site, email..." />
+            <select id="manualType" aria-label="Term type">
+              <option value="person">Person</option>
+              <option value="org">Organization</option>
+            </select>
+            <button id="addTerm" type="button" class="secondary small">Add</button>
+          </div>
+
+          <div id="termsList" class="terms-list" aria-live="polite">
+            <p class="muted">No terms yet.</p>
+          </div>
+        </section>
+
+        <div class="button-row">
+          <button id="generate" type="button" class="primary">Generate Note</button>
+          <button id="clearAll" type="button" class="secondary">Clear</button>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel output-panel" aria-label="Generated Markdown">
+        <div class="section-title">
+          <h2>Markdown</h2>
+          <div class="button-row compact">
+            <button id="copyOutput" type="button" class="secondary small">Copy</button>
+            <button id="downloadOutput" type="button" class="secondary small">Download</button>
+          </div>
+        </div>
+        <textarea id="output" rows="24" placeholder="Generated note will appear here"></textarea>
+        <div class="preview-head">
+          <h3>Preview</h3>
+        </div>
+        <pre id="preview" class="preview"></pre>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

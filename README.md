@@ -48,6 +48,33 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## GitHub Pages Web App
+
+This repo also includes a browser-only GitHub Pages version in `docs/`.
+
+What works in the hosted version:
+
+- Paste a meeting transcript or email thread
+- Add title, date, and context
+- Scan and review local anonymization terms before sending anything to Claude
+- Generate Obsidian-ready Markdown
+- Copy or download the `.md` note
+
+What stays local/server-only:
+
+- Saving directly into an Obsidian vault
+- Scanning vault folders
+- Customer/site mapping across local files
+- Any workflow that depends on the Next.js API routes
+
+To deploy it, enable GitHub Pages with **GitHub Actions** as the publishing source. The `.github/workflows/pages.yml` workflow publishes `docs/` to:
+
+```text
+https://ryleyp.github.io/notecroppy/
+```
+
+For a local preview, open `docs/index.html` in your browser.
+
 ### 4. Configure in the app
 
 - Open **Settings** and enter your Obsidian vault path (e.g. `/Users/yourname/Documents/MyVault`)
