@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>notecroppy</title>
+    <meta
+      name="description"
+      content="Photograph paper stationery and turn it into GoodNotes notebook paper or stickers, entirely on your device."
+    />
+
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#f7f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#171317" media="(prefers-color-scheme: dark)" />
+
+    <!-- iOS needs these to install to the home screen as a standalone app. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="notecroppy" />
+    <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
