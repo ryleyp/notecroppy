@@ -44,7 +44,8 @@ export default function App() {
   const [brushSize, setBrushSize] = useState(24);
   const painting = useRef(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
 
   const settings: EditSettings | null = useMemo(
     () => (quad ? { quad, rotation, filter } : null),
@@ -88,7 +89,8 @@ export default function App() {
     } finally {
       setBusy(null);
       // Allow re-picking the same file.
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (libraryInputRef.current) libraryInputRef.current.value = '';
     }
   };
 
@@ -220,16 +222,33 @@ export default function App() {
               <button
                 className="primary large"
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => cameraInputRef.current?.click()}
               >
-                Take or choose a photo
+                Take a photo
+              </button>
+              <button
+                className="ghost wide"
+                type="button"
+                onClick={() => libraryInputRef.current?.click()}
+              >
+                Choose from Photos
               </button>
             </div>
+            {/* Two inputs, not one: the `capture` attribute is what steers iOS
+                straight into the camera, skipping the Photo Library option in
+                the picker sheet — it has to be absent for a library pick. */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
+              hidden
+              onChange={(event) => void handleFile(event.target.files?.[0])}
+            />
+            <input
+              ref={libraryInputRef}
+              type="file"
+              accept="image/*"
               hidden
               onChange={(event) => void handleFile(event.target.files?.[0])}
             />
